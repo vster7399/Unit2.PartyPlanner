@@ -6,7 +6,6 @@ const state = {
 };
 
 const eventList = document.querySelector("#events");
-
 const addEventForm = document.querySelector("#addEvent"); 
 addEventForm.addEventListener("submit", addEvent);
 
@@ -27,10 +26,12 @@ async function getEvents() {
 }
 
 function renderEvents() {
+  console.log(state.events)
       if (!eventList || eventList.length == 0) {
             eventList.innerHTML = "<li>No events found.</li>";
           return;
 }
+
 const eventInfo = state.events.map((event) => {
 const li = document.createElement("li");
     li.innerHTML = `
@@ -40,11 +41,83 @@ const li = document.createElement("li");
       <p>${event.location}</p>
       <p>${event.description}</p>
     `;
+
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = "Delete Event"
+    li.append(deleteButton);
+
+    deleteButton.addEventListener("click", () => deleteEvent(event.id));
+
+    const editButton = document.createElement('button');
+    editButton.textContent = "Edit Event"
+    li.append(editButton);
+    
+    editButton.addEventListener("click", () => updateEvent(event.id));
+
     return li;
 });
   
   eventList.replaceChildren(...eventInfo);
-  }
+}
   
+async function addEvent(event) {
+  event.preventDefault();
 
-//review block 20 tomorrow (note to self)
+  try {
+    const response = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: addEventForm.name.value,
+        date: addEventForm.date.value,
+        time: addEventForm.time.value,
+        location: addEventForm.location.value,
+        description: addEventForm.description.value,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Sorry. Event not created.");
+    }
+
+    render();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function deleteEvent(id) {
+  try {
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "DELETE",
+    })
+
+    render()
+  } catch (error) {
+    console.error(error)
+  }
+}
+
+async function updateEvent(id) {
+  try {
+    const response = await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: addEventForm.name.value,
+        date: addEventForm.date.value,
+        time: addEventForm.time.value,
+        location: addEventForm.location.value,
+        description: addEventForm.description.value,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Sorry. Event not created.");
+    }
+
+    render();
+  } catch (error) {
+    console.error(error);
+  }
+}
